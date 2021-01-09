@@ -1,0 +1,55 @@
+kind: pipeline
+name: default
+
+steps:
+
+- name: gradle-build-war
+  image: openjdk:11-jdk
+  commands:
+    - ./gradlew -Dorg.gradle.daemon=false -b build.gradle clean war
+    - ls -lisa ./build/libs/
+  volumes:
+  - name: maven-cache
+    path: /root/.m2
+
+  # push an image to geopossachs/bootsfaces_frontend:snapshot
+- name: docker-publish
+  when:
+    branch:
+      - master
+  image: plugins/docker
+  settings:
+    repo: geopossachs/bootsfaces_frontend
+    tags: snapshot
+    dockerfile: Dockerfile-wildfly
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+
+  # boot the app on a docker based runtime
+- name: container-reboot
+  when:
+    branch:
+      - master
+  image: drillster/drone-rsync
+  environment:
+    RSYNC_KEY:
+      from_secret: rsync_key
+    RSYNC_USER:
+      from_secret: rsync_user
+  settings:
+    hosts: [ "www.bootsfaces.de" ]
+    source: ./docker-compose.yml
+    target: /srv/bootsfaces-frontend/
+    secrets: [ rsync_user, rsync_key ]
+    script:
+      - cd /srv/bootsfaces-frontend/
+      - docker-compose pull
+      - docker-compose up -d --remove-orphans
+
+
+volumes:
+  - name: maven-cache
+    host: 
+      path: /temp/drone/m2cache
