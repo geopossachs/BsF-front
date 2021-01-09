@@ -14,9 +14,9 @@ steps:
 
   # push an image to geopossachs/bootsfaces_frontend:snapshot
 - name: docker-publish
-  when:
-    branch:
-      - master
+ # when:
+ #   branch:
+  #    - master
   image: plugins/docker
   settings:
     repo: geopossachs/bootsfaces_frontend
@@ -29,9 +29,9 @@ steps:
 
   # boot the app on a docker based runtime
 - name: container-reboot
-  when:
-    branch:
-      - master
+ # when:
+ #   branch:
+ #     - master
   image: drillster/drone-rsync
   environment:
     RSYNC_KEY:
