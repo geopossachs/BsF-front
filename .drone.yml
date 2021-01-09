@@ -14,13 +14,15 @@ steps:
 
   # push an image to geopossachs/bootsfaces_frontend:snapshot
 - name: docker-publish
- # when:
- #   branch:
-  #    - master
+  when:
+    branch:
+      - system/prod
+      - system/stage
+      - system/dev
   image: plugins/docker
   settings:
     repo: geopossachs/bootsfaces_frontend
-    tags: snapshot
+    tags: ${DRONE_BRANCH##system/}
     dockerfile: Dockerfile-wildfly
     username:
       from_secret: docker_username
@@ -29,9 +31,11 @@ steps:
 
   # boot the app on a docker based runtime
 - name: container-reboot
- # when:
- #   branch:
- #     - master
+  when:
+    branch:
+      - system/prod
+      - system/stage
+      - system/dev
   image: drillster/drone-rsync
   environment:
     RSYNC_KEY:
@@ -41,12 +45,17 @@ steps:
   settings:
     hosts: [ "www.bootsfaces.de" ]
     source: ./docker-compose.yml
-    target: /srv/bootsfaces-frontend/
+    target: /srv/bootsfaces-frontend__${DRONE_BRANCH/\//-}/
     secrets: [ rsync_user, rsync_key ]
     script:
-      - cd /srv/bootsfaces-frontend/
+      - cd /srv/bootsfaces-frontend__${DRONE_BRANCH/\//-}/
+      - echo VERSION=${DRONE_BRANCH##system/}>.env
+      - echo PORT=5070>>.env
+      #- echo PORT=5060>>.env
+      #- echo PORT=5050>>.env
       - docker-compose pull
       - docker-compose up -d --remove-orphans
+
 
 
 volumes:
