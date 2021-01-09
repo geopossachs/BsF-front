@@ -49,9 +49,9 @@ steps:
     script:
       - cd /srv/bootsfaces-frontend__${DRONE_BRANCH/\//-}/
       - echo VERSION=${DRONE_BRANCH##system/}>.env
-      - if [ ${DRONE_BRANCH##system/} = "production" ]; then echo PORT=5070>>.env fi
-      - if [ ${DRONE_BRANCH##system/} = "stage" ]; then echo PORT=5060>>.env fi
-      - if [ ${DRONE_BRANCH##system/} = "dev" ]; then echo PORT=5050>>.env fi
+      - if [ "${DRONE_BRANCH##system/}" = "production" ]; then echo "PORT=5070" >> .env ; fi
+      - if [ "${DRONE_BRANCH##system/}" = "stage" ]; then echo "PORT=5060" >> .env ; fi
+      - if [ "${DRONE_BRANCH##system/}" = "dev" ]; then echo "PORT=5050" >> .env ; fi
       - docker-compose pull
       - docker-compose up -d --remove-orphans
 
