@@ -12,13 +12,12 @@ steps:
   - name: maven-cache
     path: /root/.m2
 
-  # push an image to geopossachs/bootsfaces_frontend:snapshot
+  # push an image to geopossachs/bootsfaces_frontend:{environment}
 - name: docker-publish
   when:
     branch:
-      - system/prod
+      - system/production
       - system/stage
-      - system/dev
   image: plugins/docker
   settings:
     repo: geopossachs/bootsfaces_frontend
@@ -33,7 +32,7 @@ steps:
 - name: container-reboot
   when:
     branch:
-      - system/prod
+      - system/production
       - system/stage
       - system/dev
   image: drillster/drone-rsync
@@ -50,12 +49,11 @@ steps:
     script:
       - cd /srv/bootsfaces-frontend__${DRONE_BRANCH/\//-}/
       - echo VERSION=${DRONE_BRANCH##system/}>.env
-      - echo PORT=5070>>.env
-      #- echo PORT=5060>>.env
-      #- echo PORT=5050>>.env
+      - if [ ${DRONE_BRANCH##system/} = "production" ]; then echo PORT=5070>>.env fi
+      - if [ ${DRONE_BRANCH##system/} = "stage" ]; then echo PORT=5060>>.env fi
+      - if [ ${DRONE_BRANCH##system/} = "dev" ]; then echo PORT=5050>>.env fi
       - docker-compose pull
       - docker-compose up -d --remove-orphans
-
 
 
 volumes:
